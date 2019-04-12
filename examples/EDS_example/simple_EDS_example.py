@@ -53,8 +53,8 @@ for el in elements:
 ############################################################################
 ##################################################################
 
-from numpy import loadtxt, array, zeros, ones, arctan2, mean
-from ucs_chemmap.tools import *
+from numpy import loadtxt, array, zeros, ones, arctan2, mean, clip
+from cmpuc.tools import *
 from matplotlib.pyplot import *
 from matplotlib.ticker import MultipleLocator
 rcParams.update({'font.size': 12})
