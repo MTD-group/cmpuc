@@ -26,7 +26,7 @@ auto_tune_L_plane_to_data = False
 contrast_boost = 1.0
 
 from cmpuc.analytic_data import test_compositions
-sRGB1_map  = my_map(
+image  = my_map(
 				data = test_compositions,
 				contrast_boost = contrast_boost,
 				auto_tune_L_plane_to_data = auto_tune_L_plane_to_data,
@@ -36,7 +36,7 @@ sRGB1_map  = my_map(
 ################## now we can make plot and  accessory plots
 
 fig, ax = plt.subplots()
-ax.imshow(np.clip(sRGB1_map,0,1), origin = 'lower')
+ax.imshow(np.clip(image,0,1), origin = 'lower')
 
 
 ## when looking at the LAB slice, the colors are computed on a grid, you can control how fine that grid is.
@@ -45,10 +45,22 @@ triangle_on_isoluminant_slice(ax, my_map, ab_step_size = 1.0)
 
 
 ## This is is the number of triangles along the side of the mixing diagram
-number_of_triangles = 6
+number_of_triangles = 10
 fig, ax = plt.subplots()
 isoluminant_triangle(ax, my_map,
-        nsegs = number_of_triangles,
-        labels = ['Part 1','Part 2','Part 3' ])
+        nsegs = number_of_triangles)
+
+
+#### compare to RGB method
+from cmpuc import sRGB1_colormap, sRGB1_triangle
+color_points = [(1,0,0),(0,1,0),(0,0,1)]
+fig, ax = plt.subplots()
+image_sRGB1 = sRGB1_colormap(data = test_compositions, color_points = color_points)
+ax.imshow(np.clip(image_sRGB1,0,1), origin = 'lower')
+
+
+fig, ax = plt.subplots()
+sRGB1_triangle(ax, color_points = color_points, order = [0,2,1], #sRGB1 has opposite handednes from lab
+        nsegs = number_of_triangles)
 
 plt.show()

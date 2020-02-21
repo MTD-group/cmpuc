@@ -1,3 +1,8 @@
+
+import numpy as np
+default_corner_points = 128
+
+
 def corner_sRGB1_map(
 				data,
 				elements,

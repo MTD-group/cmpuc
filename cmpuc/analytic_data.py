@@ -1,5 +1,5 @@
 import numpy as np
-import matplotlib.pyplot as plt
+
 
 
 delta = 0.1# 0.025
@@ -21,6 +21,8 @@ C3 = C3 - C3.min()
 test_compositions = [C1,C2,C3]
 
 if __name__ == "__main__":
+    import matplotlib.pyplot as plt
+    from matplotlib import cm
 
     C1 = (C1-C1.min()) / (C1.max() - C1.min())
     C2 = (C2-C2.min()) / (C2.max() - C2.min())
@@ -30,13 +32,16 @@ if __name__ == "__main__":
     RGB_style = np.moveaxis(RGB_style,0,-1)
 
     fig, axes = plt.subplots(ncols = 4)
-    axes[0].imshow(C1, vmax=1.0, vmin=0,
+    axes[0].set_title('Red')
+    axes[0].imshow(C1, vmax=1.0, vmin=0, cmap = cm.gray,
         origin='lower', extent=[-imsize, imsize, -imsize, imsize])
 
-    axes[1].imshow(C2, vmax=1.0, vmin=0,
+    axes[1].set_title('Green')
+    axes[1].imshow(C2, vmax=1.0, vmin=0, cmap = cm.gray,
         origin='lower', extent=[-imsize, imsize, -imsize, imsize])
 
-    axes[2].imshow(C3, vmax=1.0, vmin=0,
+    axes[2].set_title('Blue')
+    axes[2].imshow(C3, vmax=1.0, vmin=0, cmap = cm.gray,
         origin='lower', extent=[-imsize, imsize, -imsize, imsize])
 
     axes[3].imshow(RGB_style, vmax=1.0, vmin=0,

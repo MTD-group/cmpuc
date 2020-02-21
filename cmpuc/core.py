@@ -34,6 +34,20 @@ def bounds_test(sRGB_map):
 	return state
 
 
+def deuteranomaly_with_alpha(sRGB1_map):
+	#cvd_space = {"name": "sRGB1+CVD", "cvd_type":"deuteranomaly", "severity": 50}
+	sRGB1_map_d = np.zeros(sRGB1_map.shape)
+	sRGB1_map_d[:,:,0:3] = np.clip(cspace_convert(sRGB1_map[:,:,0:3], cvd_space, "sRGB1"),0,1)
+	sRGB1_map_d[:,:,3] = sRGB1_map[:,:,3]
+	return sRGB1_map_d
+
+
+
+
+
+
+
+
 class uniform_chemical_map:
 	def __init__(self, radius, angle_0, L_plane, center = (0.0,0.0), color_space = default_color_space):
 		# center is in the L_plane and also get scaled to 0 for lower signals
@@ -46,12 +60,11 @@ class uniform_chemical_map:
 	def get_color_vectors(self, norm = 1.0):
 		color_vectors = []
 		for i in range(3):
-			color_vectors.append(
-				norm * np.array([
-					self.L_plane,
+			cv = norm * np.array([ self.L_plane,
 					self.radius*np.cos(np.pi/180*(self.angle_0 + i*120) ),
 					self.radius*np.sin(np.pi/180*(self.angle_0 + i*120) )
-					])  )
+					])
+			color_vectors.append(cv)
 		return color_vectors
 
 	def get_color_points(self, norm = 1.0):
@@ -59,10 +72,10 @@ class uniform_chemical_map:
 		center_array = np.array([0, self.center[0],self.center[1]])
 		color_points = []
 		for i in range(3):
-			color_points.append(cv[i]+center_array)
+			color_points.append(cv[i]+norm*center_array)
 		return color_points
 
-	def get_sRGB1_color_points(self, use_deuteranomaly = False, norm = 1.0):
+	def get_sRGB1_color_points(self, norm = 1.0, use_deuteranomaly = False ):
 		cp = self.get_color_points(norm)
 		sRGB1_color_points = []
 		for i in range(3):
@@ -76,10 +89,10 @@ class uniform_chemical_map:
 	def __call__(self, data, auto_tune_L_plane_to_data = False,  contrast_boost = 1.0, verbose = True, use_deuteranomaly = False, scale_alpha = False ):
 
 
-		sRGB1_cp = self.get_sRGB1_color_points()
-		if verbose:
-			for i in range(3):
-				print('sRGB1 color point %i:' %i, "(%.3f %.3f %.3f)"% tuple(sRGB1_cp[i]))
+		#sRGB1_cp = self.get_sRGB1_color_points()
+		#if verbose:
+		#	for i in range(3):
+		#		print('sRGB1 color point %i:' %i, "(%.3f %.3f %.3f)"% tuple(sRGB1_cp[i]))
 
 
 		normed_data = []
@@ -116,7 +129,7 @@ class uniform_chemical_map:
 
 		if auto_tune_L_plane_to_data:
 			max_L = Lab_map[:,:,0].max()
-			if verbose: print ('Max L', Lab_map[:,:,0].max())
+			if verbose: print ('Initial L_plane ',self.L_plane)
 
 			### now we can scale it all to fit tighter
 			# step 1, do a log search upwards to find an upper cutoff
@@ -140,12 +153,12 @@ class uniform_chemical_map:
 
 				if sRGB1_max>1.0:
 					L_scale_is_safe = False
-					if verbose:print (L_scale_min, L_scale, L_scale_max, L_scale_is_safe)
+					#if verbose:print (L_scale_min, L_scale, L_scale_max, L_scale_is_safe)
 					L_scale_max = L_scale
 
 				else:
 					L_scale_is_safe = True
-					if verbose:print (L_scale_min, L_scale, L_scale_max, L_scale_is_safe)
+					#if verbose:print (L_scale_min, L_scale, L_scale_max, L_scale_is_safe)
 					L_scale_min = L_scale
 
 			if L_scale_is_safe==False:
@@ -156,6 +169,7 @@ class uniform_chemical_map:
 				L_scale = 1.0
 
 			self.L_plane = L_scale * self.L_plane
+			if verbose: print ('Autotuned L_plane ',self.L_plane)
 			Lab_test[:,:,0] = L_scale * Lab_map[:,:,0]
 
 
@@ -168,14 +182,15 @@ class uniform_chemical_map:
 			self.L_plane = contrast_boost * self.L_plane
 
 		sRGB1_map[:,:,0:3] = sRGB1_test[:,:,0:3]
-		print ('Max sRGB1', sRGB1_map[:,:,0:3].max())
+		if verbose: print ('Max sRGB1', sRGB1_map[:,:,0:3].max())
 
 		if scale_alpha:
 			sRGB1_map[:,:,3] =  overall_norm
 
 		if verbose: bounds_test(sRGB1_map)
 		if use_deuteranomaly:
-			sRGB1_map = np.clip(cspace_convert(sRGB1_map, cvd_space, "sRGB1"),0,1)
+			sRGB1_map = deuteranomaly_with_alpha(sRGB1_map)
+			# np.clip(cspace_convert(sRGB1_map, cvd_space, "sRGB1"),0,1)
 		return  sRGB1_map
 
 	def maximize_triangle_radius(self, cut_off = 0.01, radius_min = 0.0,
@@ -234,12 +249,7 @@ class uniform_chemical_map:
 
 
 
-def deuteranomaly_with_alpha(sRGB1_map):
-	#cvd_space = {"name": "sRGB1+CVD", "cvd_type":"deuteranomaly", "severity": 50}
-	sRGB1_map_d = np.zeros(sRGB1_map.shape)
-	sRGB1_map_d[:,:,0:3] = np.clip(cspace_convert(sRGB1_map[:,:,0:3], cvd_space, "sRGB1"),0,1)
-	sRGB1_map_d[:,:,3] = sRGB1_map[:,:,3]
-	return sRGB1_map_d
+
 
 
 
@@ -251,7 +261,10 @@ def isoluminant_triangle(ax,
 				norm = 1.0,
 				font_options = {},
 				label_offset = 0.02,
-				use_deuteranomaly = False,verbose = False):
+				use_deuteranomaly = False, verbose = False,
+				remove_undisplayable = False,
+				color_for_undisplayable = (1.0, 1.0, 1.0, 0.0) ):
+
 	from matplotlib.patches import Polygon
 
 
@@ -263,6 +276,8 @@ def isoluminant_triangle(ax,
 	#colors = []
 
 	color_ps = np.array(cv )
+	bg_color = np.array(color_for_undisplayable)
+
 	width = norm
 	height = norm*np.sin(60*np.pi/180)
 	delta = width/nsegs
@@ -282,6 +297,8 @@ def isoluminant_triangle(ax,
 	map_matrix = map_matrix.T
 
 	imap = inv(map_matrix)
+
+
 
 	for i in range(3):
 		if verbose: print ('point',i)
@@ -306,7 +323,10 @@ def isoluminant_triangle(ax,
 			#print (fracs)
 			color = norm * (color_ps[0]*fracs[0]+color_ps[1]*fracs[1]+color_ps[2]*fracs[2] + center_array)
 			sRGB1_color = cspace_convert(color, chemical_map.color_space, "sRGB1")
-			if use_deuteranomaly: sRGB1_color = np.clip(cspace_convert(sRGB1_color, cvd_space, "sRGB1"),0,1)
+			if use_deuteranomaly: sRGB1_color = cspace_convert(sRGB1_color, cvd_space, "sRGB1")
+			if remove_undisplayable:
+				if  np.any(sRGB1_color<0,0) or np.any(1.0<sRGB1_color):
+					sRGB1_color = bg_color
 			ax.add_patch(  Polygon(vertices, color =np.clip(sRGB1_color,0,1), **triangle_style))
 
 
@@ -323,7 +343,10 @@ def isoluminant_triangle(ax,
 			#print (fracs)
 			color = norm * (color_ps[0]*fracs[0]+color_ps[1]*fracs[1]+color_ps[2]*fracs[2] + center_array)
 			sRGB1_color = cspace_convert(color, chemical_map.color_space, "sRGB1")
-			if use_deuteranomaly: sRGB1_color = np.clip(cspace_convert(sRGB1_color, cvd_space, "sRGB1"),0,1)
+			if use_deuteranomaly: sRGB1_color = cspace_convert(sRGB1_color, cvd_space, "sRGB1")
+			if remove_undisplayable:
+				if  np.any(sRGB1_color<0,0) or np.any(1.0<sRGB1_color):
+					sRGB1_color = bg_color
 			ax.add_patch(  Polygon(vertices, color =np.clip(sRGB1_color,0,1), **triangle_style))
 
 
@@ -344,7 +367,7 @@ def isoluminant_slice(
 					ab_step_size = 1.0,
 					amin = -128, amax = 128,
 					bmin = -128, bmax = 128,
-					color_for_undisplayable = [1.0, 1.0, 1.0, 0.0]):
+					color_for_undisplayable = (1.0, 1.0, 1.0, 0.0)):
 
 	#from numpy import  array, ones, zeros, meshgrid, arange, linspace
 	from colorspacious import cspace_convert
@@ -385,21 +408,22 @@ def isoluminant_slice(
 def triangle_on_isoluminant_slice(
 						ax,
 						chemical_map,
+						norm =1.0,
 						ab_step_size = 1.0,
 						amin = -128, amax = 128,
 						bmin = -128, bmax = 128,
 						use_deuteranomaly = False, color_for_undisplayable = [1.0, 1.0, 1.0, 0.0],
 						):
 
-	cv = chemical_map.get_color_vectors()
-	center_array = np.array([0,chemical_map.center[0], chemical_map.center[1]])
+
+
+	cp = chemical_map.get_color_points(norm)
 
 	a_points = []
 	b_points = []
 	for i in range(3):
-		point = cv[i]+center_array
-		a_points.append( point[1])
-		b_points.append( point[2])
+		a_points.append( cp[i][1])
+		b_points.append( cp[i][2])
 		ax.plot([0, a_points[-1]],  [0, b_points[-1]], color = 'dimgrey')
 
 	ax.plot(a_points + [a_points[0]],  b_points + [b_points[0]], color = 'k')
@@ -414,7 +438,7 @@ def triangle_on_isoluminant_slice(
 	#bmin, bmax = min(b_points) - buffer*radius, max(b_points) + buffer*radius
 
 
-	LAB_slice_image = isoluminant_slice( L_plane = chemical_map.L_plane,
+	LAB_slice_image = isoluminant_slice( L_plane = chemical_map.L_plane*norm,
 							ab_step_size = ab_step_size,
 							amin = amin, amax = amax,
 							bmin = bmin, bmax = bmax, color_for_undisplayable = color_for_undisplayable  )
@@ -423,15 +447,13 @@ def triangle_on_isoluminant_slice(
 
 	if use_deuteranomaly : LAB_slice_image = deuteranomaly_with_alpha(LAB_slice_image)
 
+	ax.set_title(chemical_map.color_space)
 	ax.imshow(LAB_slice_image , extent = extent, origin = 'lower')#, interpolation = 'bicubic')
 	ax.set_xlim(amin, amax)
 	ax.set_ylim(bmin, bmax)
 
 
-def sRGB1_colormap(data,
-					elements,
-					ax,
-					color_points):
+def sRGB1_colormap(data, color_points = [(1,0,0),(0,1,0),(0,0,1)]):
 
 	maxes = []
 	for dat in data:
@@ -447,14 +469,12 @@ def sRGB1_colormap(data,
 			for data_index in  range(3):
 				sRGB1_map[i,j,0:3] += sRGB1_color_points[data_index] * data[data_index][i,j]/maxes[data_index]
 
-	ax.imshow(np.clip(sRGB1_map,0,1))
+	#ax.imshow(np.clip(sRGB1_map,0,1))
+	return sRGB1_map
 
 
-	return np.clip(sRGB1_map,0,1)
-
-
-def sRGB1_color_triangle(ax,
-	color_points = [[1.0, 0.0, 1.0], [0.0, 1.0, 1.0], [1.0, 1.0, 0.0]] ,
+def sRGB1_triangle(ax,
+	color_points = [(1,0,0),(0,1,0),(0,0,1)] ,
 	nsegs = 20,
 	labels = ['Part 1','Part 2','Part 3' ],
 	norm = 1.0,
@@ -462,6 +482,8 @@ def sRGB1_color_triangle(ax,
 	font_options = {},
 	label_offset = 0.02,
 	use_deuteranomaly = False,
+	remove_undisplayable = False,
+	color_for_undisplayable = (1.0, 1.0, 1.0, 0.0),
 	verbose = False ):
 	from matplotlib.patches import Polygon
 
@@ -513,6 +535,9 @@ def sRGB1_color_triangle(ax,
 			#print (fracs)
 			color = norm * (color_ps[0]*fracs[0]+color_ps[1]*fracs[1]+color_ps[2]*fracs[2])
 			if use_deuteranomaly: color = cspace_convert(color, cvd_space, "sRGB1")
+			if remove_undisplayable:
+				if  np.any(color<0,0) or np.any(1.0<color):
+					color = bg_color
 			ax.add_patch(  Polygon(vertices, color =np.clip(color,0,1), **triangle_style))
 
 
@@ -528,7 +553,10 @@ def sRGB1_color_triangle(ax,
 			fracs = imap.dot([xc,yc,1])
 			#print (fracs)
 			color = norm * ( color_ps[0]*fracs[0]+color_ps[1]*fracs[1]+color_ps[2]*fracs[2])
-			if use_deuteranomaly: color = np.clip(cspace_convert(color, cvd_space, "sRGB1"),0,1)
+			if use_deuteranomaly: color = cspace_convert(color, cvd_space, "sRGB1")
+			if remove_undisplayable:
+				if  np.any(color<0,0) or np.any(1.0<color):
+					color = bg_color
 			ax.add_patch(  Polygon(vertices, color =np.clip(color,0,1), **triangle_style))
 
 	if len(labels) ==3:
@@ -613,7 +641,7 @@ if __name__ == "__main__":
 
 	############# sRGB1 triangle test
 	fig, ax = plt.subplots()
-	sRGB1_color_triangle(ax,
+	sRGB1_triangle(ax,
 					color_points = [[1.0, 0.0, 1.0], [0.0, 1.0, 1.0],
 					[1.0, 1.0, 0.0]], nsegs = 7)
 
@@ -621,7 +649,7 @@ if __name__ == "__main__":
 	############# isoluminant triangle test
 	fig, ax = plt.subplots()
 	norm = 0.5
-	sRGB1_color_triangle(ax,
+	sRGB1_triangle(ax,
 					color_points = [[1.0, 0.0, 1.0], [0.0, 1.0, 1.0],
 					[1.0, 1.0, 0.0]], nsegs = 7, norm = norm)
 	ax.set_title('Triangle at norm = %.3f'%norm)
