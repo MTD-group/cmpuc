@@ -81,17 +81,19 @@ plt.show()
 ```
 Here are the results of this example script:
 
-![cmpuc_mapping](/cmpuc/examples/cmpuc_mapping.png) ![sRGB1_mapping](/cmpuc/examples/sRGB1_mapping.png)
+![cmpuc_mapping](/cmpuc/examples/cmpuc_mapping.png | width=200) ![sRGB1_mapping](/cmpuc/examples/sRGB1_mapping.png | width=200)
 
-1. The perceptually uniform chemical mapping.
+1. (left) The perceptually uniform chemical mapping and (right) the traditional RGB primary mapping. 
 
-![isoslice](/cmpuc/examples/isoslice.png)
+![isoluminant_triangle](/cmpuc/examples/isoluminant_triangle.png | width 200) ![sRGB1_triangle](/cmpuc/examples/sRGB1_triangle.png | 200)
 
-2. The pyramid base plane in an isoluminant slice of the perceptually uniform color space. 
+2. (left) The chemical mixing triangle for the cmpuc color mapping, 
 
-![isoluminant_triangle](/cmpuc/examples/isoluminant_triangle.png)
+![isoslice](/cmpuc/examples/isoslice.png | width=200)
 
-3. The chemical mixing triangle for understandin the colormapping, lower signal shrinks the triangle towards the black point.
+3. The pyramid base plane is an isoluminant slice of the perceptually uniform color space. Lower signal shrinks the triangle towards the black point, *i.e.* the point of the pyramid
+
+
 
 
 
