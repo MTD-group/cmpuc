@@ -7,6 +7,15 @@ from colorspacious import cspace_convert
 default_color_space = "CIELab"
 cvd_space = {"name": "sRGB1+CVD", "cvd_type":"deuteranomaly", "severity": 50}
 
+
+# I'm not sure that 'antialiased' is needed to be off, but it's suggested online
+# there needs to be *some* line width or the vectorized representations like pdf have stupid lines
+# the joinstyle of bevel or round makes the lines not shoot outwards like miter
+triangle_style = {'antialiased': False, 'linewidth' : 0.1, 'joinstyle': 'bevel' }
+
+
+
+
 def bounds_test(sRGB_map):
 	nout = [0,0,0,0]
 	for ix in range(sRGB_map.shape[0]):
@@ -224,207 +233,14 @@ class uniform_chemical_map:
 		return best_angle, best_radius
 
 
-def corner_map(	data,
-				elements,
-				ax,
-				Lp,
-				radius,
-				angle_0,
-				L_scale,
-				npts = default_corner_points,
-				bg_color = np.array([1, 1, 1, 0]) ):
-
-	color_points = []
-	color_points.append( np.array([Lp,  radius*np.cos(np.pi/180*(angle_0+  0))  ,   radius*np.sin(np.pi/180*(angle_0+   0))])  )
-	color_points.append( np.array([Lp,  radius*np.cos(np.pi/180*(angle_0+ 120)) ,   radius*np.sin(np.pi/180*(angle_0+ 120))])  )
-	color_points.append( np.array([Lp,  radius*np.cos(np.pi/180*(angle_0+ 240)) ,   radius*np.sin(np.pi/180*(angle_0+ 240))])  )
-
-	from numpy import linspace
-	values = linspace(0,1,npts)
-
-	Lab_guide = np.zeros((npts,npts,3))
-	fractions = np.zeros((npts,npts,3))
-	sRGB1_map = np.ones((npts,npts,4))
-
-	for i in range(npts):
-		iv = values[i]
-		for j in range(npts-i):
-			jv = values[j]
-
-			fraction = np.array( [(1-jv-iv), iv, jv ])
-			#print(iv, jv, fraction)
-			for data_index in  range(3):
-				Lab_guide[j,i] += color_points[data_index] * fraction[data_index]* L_scale
-
-	sRGB1_map[:,:,0:3] = cspace_convert(Lab_guide, default_color_space, "sRGB1")
-	for i in range(npts):
-		for j in range(npts-i,npts):
-			sRGB1_map[j,i] = bg_color
-
-	maxes = []
-	for dat in data:
-		maxes.append(dat.max())
-
-	ax.imshow(np.clip(sRGB1_map,0,1), origin = 'lower', extent=[0,1,0,1], interpolation = 'bicubic')
-	ax.text(0,0, elements[0]+'\n%0.1f%%'% maxes[0], ha = 'left')
-	ax.text(1,0, elements[1]+'\n%0.1f%%'% maxes[1], ha = 'right')
-	ax.text(0,1, elements[2]+'\n%0.1f%%'% maxes[2], ha = 'left', va = 'top')
-
-	return np.clip(sRGB1_map,0,1)
-
-
-
-
-def sRGB1_colormap(data,
-					elements,
-					ax,
-					color_points):
-
-	maxes = []
-	for dat in data:
-		maxes.append(dat.max())
-
-	data_shape = data[0].shape
-	sRGB1_map = np.zeros(list(data_shape)+[4])
-	sRGB1_color_points = np.array(color_points)
-
-	for i in range(data_shape[0]):
-		for j in range(data_shape[1]):
-			sRGB1_map[i,j,3] = 1.0
-			for data_index in  range(3):
-				sRGB1_map[i,j,0:3] += sRGB1_color_points[data_index] * data[data_index][i,j]/maxes[data_index]
-
-	ax.imshow(np.clip(sRGB1_map,0,1))
-
-
-	return np.clip(sRGB1_map,0,1)
-
-
-def corner_sRGB1_map(
-				data,
-				elements,
-				ax,
-				color_points,
-				npts = default_corner_points,
-				bg_color = np.array([1, 1, 1, 0]) ):
-
-
-	from numpy import linspace
-	values = linspace(0,1,npts)
-
-	sRGB1_map = np.ones((npts,npts,4))
-	fractions = np.zeros((npts,npts,3))
-	sRGB1_color_points = np.array(color_points)
-	bg_color = np.array( [1,1,1,0])
-
-	for i in range(npts):
-		iv = values[i]
-		for j in range(npts-i):
-			jv = values[j]
-
-			fraction = np.array( [(1-jv-iv), iv, jv ])
-			#print(iv, jv, fraction)
-			sRGB1_map[j,i] = np.array([0,0,0,1])
-			for data_index in  range(3):
-				sRGB1_map[j,i,0:3] += sRGB1_color_points[data_index] * fraction[data_index]
-
-		for j in range(npts-i,npts):
-			sRGB1_map[j,i] = bg_color
-
-	maxes = []
-	for dat in data:
-		maxes.append(dat.max())
-	ax.imshow(np.clip(sRGB1_map,0,1), origin = 'lower', extent=[0,1,0,1], interpolation = 'bicubic')
-	ax.text(0,0, elements[0]+'\n%0.1f%%'% maxes[0], ha = 'left')
-	ax.text(1,0, elements[1]+'\n%0.1f%%'% maxes[1], ha = 'right')
-	ax.text(0,1, elements[2]+'\n%0.1f%%'% maxes[2], ha = 'left', va = 'top')
-
-	return np.clip(sRGB1_map,0,1)
-
 
 def deuteranomaly_with_alpha(sRGB1_map):
-	cvd_space = {"name": "sRGB1+CVD", "cvd_type":"deuteranomaly", "severity": 50}
+	#cvd_space = {"name": "sRGB1+CVD", "cvd_type":"deuteranomaly", "severity": 50}
 	sRGB1_map_d = np.zeros(sRGB1_map.shape)
 	sRGB1_map_d[:,:,0:3] = np.clip(cspace_convert(sRGB1_map[:,:,0:3], cvd_space, "sRGB1"),0,1)
 	sRGB1_map_d[:,:,3] = sRGB1_map[:,:,3]
 	return sRGB1_map_d
 
-# I'm not sure that 'antialiased' is needed to be off, but it's suggested online
-# there needs to be *some* line width or the vectorized representations like pdf have stupid lines
-# the joinstyle of bevel or round makes the lines not shoot outwards like miter
-triangle_style = {'antialiased': False, 'linewidth' : 0.1, 'joinstyle': 'bevel' }
-
-def sRGB1_color_triangle(ax,  color_points = [[1.0, 0.0, 1.0], [0.0, 1.0, 1.0], [1.0, 1.0, 0.0]] , nsegs = 40, use_deuteranomaly = False, verbose = False):
-	from matplotlib.patches import Polygon
-
-	patches = []
-	colors = []
-
-	color_ps = np.array([color_points[0], color_points[2], color_points[1]])
-	#color_ps = np.array(color_points)
-	delta = (1/nsegs)
-	deltay = np.sin(60*np.pi/180)/nsegs
-
-	cvd_space = {"name": "sRGB1+CVD", "cvd_type":"deuteranomaly", "severity": 50}
-	from colorspacious import cspace_convert
-
-	from numpy.linalg import inv
-	map_matrix = np.array([
-						[0,   0,              1],
-						[0.5, np.sin(60*np.pi/180), 1],
-						[1.0, 0,              1]]).T
-
-
-	imap = inv(map_matrix)
-
-	for i in range(3):
-		if verbose: print ('point',i)
-		if verbose: print(map_matrix.T[i])
-		fracs = imap.dot(map_matrix.T[i])
-		if verbose: print ('fracs', fracs)
-		color = color_ps[0]*fracs[0]+color_ps[1]*fracs[1]+color_ps[2]*fracs[2]
-		if verbose: print('color',color)
-
-
-	if verbose: print('upwards triangles')
-	for iy in range(nsegs):
-		for ix in range(nsegs-iy):
-			vertices = [
-						(delta*(    0.5*iy+ix), deltay *   iy),
-						(delta*(0.5+0.5*iy+ix), deltay*(iy+1)),
-						(delta*(1.0+0.5*iy+ix), deltay *   iy)]
-
-			xc = delta*(0.5+0.5*iy+ix)
-			yc = deltay * iy + 0.5*delta*np.tan(30*np.pi/180)
-			fracs = imap.dot([xc,yc,1])
-			#print (fracs)
-			color = color_ps[0]*fracs[0]+color_ps[1]*fracs[1]+color_ps[2]*fracs[2]
-			if use_deuteranomaly: color = cspace_convert(color, cvd_space, "sRGB1")
-			ax.add_patch(  Polygon(vertices, color =np.clip(color,0,1), **triangle_style))
-
-
-	if verbose: print('downwards triangles')
-	for iy in range(nsegs-1):
-		for ix in range(nsegs-iy-1):
-			vertices = [
-						(delta*(0.5+0.5*iy+ix), deltay *(iy+1)),
-						(delta*(1.0+0.5*iy+ix), deltay * iy   ),
-						(delta*(1.5+0.5*iy+ix), deltay *(iy+1))]
-			xc = delta*(1.0+0.5*iy+ix)
-			yc = deltay *(iy+1) - 0.5*delta*np.tan(30*np.pi/180)
-			fracs = imap.dot([xc,yc,1])
-			#print (fracs)
-			color = color_ps[0]*fracs[0]+color_ps[1]*fracs[1]+color_ps[2]*fracs[2]
-			if use_deuteranomaly: color = np.clip(cspace_convert(color, cvd_space, "sRGB1"),0,1)
-			ax.add_patch(  Polygon(vertices, color =np.clip(color,0,1), **triangle_style))
-
-	#ax.set_aspect('equal', 'box')
-
-
-	ax.set_xlim(0,1)
-	ax.set_ylim(0,np.sin(60*np.pi/180))
-	ax.set_axis_off()
-	ax.set_aspect('equal')
 
 
 def isoluminant_triangle(ax,
@@ -600,6 +416,104 @@ def triangle_on_isoluminant_slice(
 	ax.imshow(LAB_slice_image , extent = extent, origin = 'lower')#, interpolation = 'bicubic')
 	ax.set_xlim(amin, amax)
 	ax.set_ylim(bmin, bmax)
+
+
+def sRGB1_colormap(data,
+					elements,
+					ax,
+					color_points):
+
+	maxes = []
+	for dat in data:
+		maxes.append(dat.max())
+
+	data_shape = data[0].shape
+	sRGB1_map = np.zeros(list(data_shape)+[4])
+	sRGB1_color_points = np.array(color_points)
+
+	for i in range(data_shape[0]):
+		for j in range(data_shape[1]):
+			sRGB1_map[i,j,3] = 1.0
+			for data_index in  range(3):
+				sRGB1_map[i,j,0:3] += sRGB1_color_points[data_index] * data[data_index][i,j]/maxes[data_index]
+
+	ax.imshow(np.clip(sRGB1_map,0,1))
+
+
+	return np.clip(sRGB1_map,0,1)
+
+
+def sRGB1_color_triangle(ax,  color_points = [[1.0, 0.0, 1.0], [0.0, 1.0, 1.0], [1.0, 1.0, 0.0]] , nsegs = 20, use_deuteranomaly = False, verbose = False):
+	from matplotlib.patches import Polygon
+
+	patches = []
+	colors = []
+
+	color_ps = np.array([color_points[0], color_points[2], color_points[1]])
+	#color_ps = np.array(color_points)
+	delta = (1/nsegs)
+	deltay = np.sin(60*np.pi/180)/nsegs
+
+	cvd_space = {"name": "sRGB1+CVD", "cvd_type":"deuteranomaly", "severity": 50}
+	from colorspacious import cspace_convert
+
+	from numpy.linalg import inv
+	map_matrix = np.array([
+						[0,   0,              1],
+						[0.5, np.sin(60*np.pi/180), 1],
+						[1.0, 0,              1]]).T
+
+
+	imap = inv(map_matrix)
+
+	for i in range(3):
+		if verbose: print ('point',i)
+		if verbose: print(map_matrix.T[i])
+		fracs = imap.dot(map_matrix.T[i])
+		if verbose: print ('fracs', fracs)
+		color = color_ps[0]*fracs[0]+color_ps[1]*fracs[1]+color_ps[2]*fracs[2]
+		if verbose: print('color',color)
+
+
+	if verbose: print('upwards triangles')
+	for iy in range(nsegs):
+		for ix in range(nsegs-iy):
+			vertices = [
+						(delta*(    0.5*iy+ix), deltay *   iy),
+						(delta*(0.5+0.5*iy+ix), deltay*(iy+1)),
+						(delta*(1.0+0.5*iy+ix), deltay *   iy)]
+
+			xc = delta*(0.5+0.5*iy+ix)
+			yc = deltay * iy + 0.5*delta*np.tan(30*np.pi/180)
+			fracs = imap.dot([xc,yc,1])
+			#print (fracs)
+			color = color_ps[0]*fracs[0]+color_ps[1]*fracs[1]+color_ps[2]*fracs[2]
+			if use_deuteranomaly: color = cspace_convert(color, cvd_space, "sRGB1")
+			ax.add_patch(  Polygon(vertices, color =np.clip(color,0,1), **triangle_style))
+
+
+	if verbose: print('downwards triangles')
+	for iy in range(nsegs-1):
+		for ix in range(nsegs-iy-1):
+			vertices = [
+						(delta*(0.5+0.5*iy+ix), deltay *(iy+1)),
+						(delta*(1.0+0.5*iy+ix), deltay * iy   ),
+						(delta*(1.5+0.5*iy+ix), deltay *(iy+1))]
+			xc = delta*(1.0+0.5*iy+ix)
+			yc = deltay *(iy+1) - 0.5*delta*np.tan(30*np.pi/180)
+			fracs = imap.dot([xc,yc,1])
+			#print (fracs)
+			color = color_ps[0]*fracs[0]+color_ps[1]*fracs[1]+color_ps[2]*fracs[2]
+			if use_deuteranomaly: color = np.clip(cspace_convert(color, cvd_space, "sRGB1"),0,1)
+			ax.add_patch(  Polygon(vertices, color =np.clip(color,0,1), **triangle_style))
+
+	#ax.set_aspect('equal', 'box')
+
+
+	ax.set_xlim(0,1)
+	ax.set_ylim(0,np.sin(60*np.pi/180))
+	ax.set_axis_off()
+	ax.set_aspect('equal')
 
 
 
