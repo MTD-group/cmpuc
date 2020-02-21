@@ -247,6 +247,7 @@ def isoluminant_triangle(ax,
 				chemical_map,
 				nsegs = 20,
 				labels = ['Part 1','Part 2','Part 3' ],
+				order = [0,1,2],
 				norm = 1.0,
 				font_options = {},
 				label_offset = 0.02,
@@ -262,14 +263,23 @@ def isoluminant_triangle(ax,
 	#colors = []
 
 	color_ps = np.array(cv )
-	delta = (1/nsegs)
-	deltay = np.sin(60*np.pi/180)/nsegs
+	width = norm
+	height = norm*np.sin(60*np.pi/180)
+	delta = width/nsegs
+	deltay = height/nsegs
 	from numpy.linalg import inv
+	#map_matrix = np.array([
+	#					[0,   0,              1],
+	#					[0.5, np.sin(60*np.pi/180), 1],
+	#					[1.0, 0,              1]]).T
+
 	map_matrix = np.array([
 						[0,   0,              1],
-						[0.5, np.sin(60*np.pi/180), 1],
-						[1.0, 0,              1]]).T
+						[width, 0,              1],
+						[0.5*width, height, 1]])
 
+	map_matrix = map_matrix[order]
+	map_matrix = map_matrix.T
 
 	imap = inv(map_matrix)
 
@@ -319,9 +329,9 @@ def isoluminant_triangle(ax,
 
 	if len(labels) ==3:
 
-		ax.text(   0,               -label_offset, labels[0], ha = 'center', va = 'top',    **font_options)
-		ax.text(   1,               -label_offset, labels[1], ha = 'center', va = 'top',    **font_options)
-		ax.text( 0.5, np.sin(60*np.pi/180)+label_offset, labels[2], ha = 'center', va = 'bottom', **font_options)
+		ax.text(   0,             -label_offset, labels[0], ha = 'center', va = 'top',    **font_options)
+		ax.text(   width,         -label_offset, labels[1], ha = 'center', va = 'top',    **font_options)
+		ax.text( 0.5*width, height+label_offset, labels[2], ha = 'center', va = 'bottom', **font_options)
 
 	ax.set_aspect('equal','box')
 	#ax.set_xlim(0,1)
@@ -443,7 +453,16 @@ def sRGB1_colormap(data,
 	return np.clip(sRGB1_map,0,1)
 
 
-def sRGB1_color_triangle(ax,  color_points = [[1.0, 0.0, 1.0], [0.0, 1.0, 1.0], [1.0, 1.0, 0.0]] , nsegs = 20, use_deuteranomaly = False, verbose = False):
+def sRGB1_color_triangle(ax,
+	color_points = [[1.0, 0.0, 1.0], [0.0, 1.0, 1.0], [1.0, 1.0, 0.0]] ,
+	nsegs = 20,
+	labels = ['Part 1','Part 2','Part 3' ],
+	norm = 1.0,
+	order = [0,1,2],
+	font_options = {},
+	label_offset = 0.02,
+	use_deuteranomaly = False,
+	verbose = False ):
 	from matplotlib.patches import Polygon
 
 	patches = []
@@ -451,18 +470,23 @@ def sRGB1_color_triangle(ax,  color_points = [[1.0, 0.0, 1.0], [0.0, 1.0, 1.0], 
 
 	color_ps = np.array([color_points[0], color_points[2], color_points[1]])
 	#color_ps = np.array(color_points)
-	delta = (1/nsegs)
-	deltay = np.sin(60*np.pi/180)/nsegs
-
-	cvd_space = {"name": "sRGB1+CVD", "cvd_type":"deuteranomaly", "severity": 50}
-	from colorspacious import cspace_convert
-
+	width = norm
+	height = norm*np.sin(60*np.pi/180)
+	delta = width/nsegs
+	deltay = height/nsegs
 	from numpy.linalg import inv
+	#map_matrix = np.array([
+	#					[0,   0,              1],
+	#					[0.5, np.sin(60*np.pi/180), 1],
+	#					[1.0, 0,              1]]).T
+
 	map_matrix = np.array([
 						[0,   0,              1],
-						[0.5, np.sin(60*np.pi/180), 1],
-						[1.0, 0,              1]]).T
+						[width, 0,              1],
+						[0.5*width, height, 1]])
 
+	map_matrix = map_matrix[order]
+	map_matrix = map_matrix.T
 
 	imap = inv(map_matrix)
 
@@ -487,7 +511,7 @@ def sRGB1_color_triangle(ax,  color_points = [[1.0, 0.0, 1.0], [0.0, 1.0, 1.0], 
 			yc = deltay * iy + 0.5*delta*np.tan(30*np.pi/180)
 			fracs = imap.dot([xc,yc,1])
 			#print (fracs)
-			color = color_ps[0]*fracs[0]+color_ps[1]*fracs[1]+color_ps[2]*fracs[2]
+			color = norm * (color_ps[0]*fracs[0]+color_ps[1]*fracs[1]+color_ps[2]*fracs[2])
 			if use_deuteranomaly: color = cspace_convert(color, cvd_space, "sRGB1")
 			ax.add_patch(  Polygon(vertices, color =np.clip(color,0,1), **triangle_style))
 
@@ -503,45 +527,38 @@ def sRGB1_color_triangle(ax,  color_points = [[1.0, 0.0, 1.0], [0.0, 1.0, 1.0], 
 			yc = deltay *(iy+1) - 0.5*delta*np.tan(30*np.pi/180)
 			fracs = imap.dot([xc,yc,1])
 			#print (fracs)
-			color = color_ps[0]*fracs[0]+color_ps[1]*fracs[1]+color_ps[2]*fracs[2]
+			color = norm * ( color_ps[0]*fracs[0]+color_ps[1]*fracs[1]+color_ps[2]*fracs[2])
 			if use_deuteranomaly: color = np.clip(cspace_convert(color, cvd_space, "sRGB1"),0,1)
 			ax.add_patch(  Polygon(vertices, color =np.clip(color,0,1), **triangle_style))
 
-	#ax.set_aspect('equal', 'box')
+	if len(labels) ==3:
+
+		ax.text(   0,             -label_offset, labels[0], ha = 'center', va = 'top',    **font_options)
+		ax.text(   width,         -label_offset, labels[1], ha = 'center', va = 'top',    **font_options)
+		ax.text( 0.5*width, height+label_offset, labels[2], ha = 'center', va = 'bottom', **font_options)
 
 
-	ax.set_xlim(0,1)
-	ax.set_ylim(0,np.sin(60*np.pi/180))
+
+	ax.set_aspect('equal','box')
+	#ax.set_xlim(0,1)
+	#ax.set_ylim(0,sin(60*pi/180))
 	ax.set_axis_off()
-	ax.set_aspect('equal')
-
-
 
 
 if __name__ == "__main__":
 
 
-	from matplotlib.pylab import figure, gca, axis, savefig, show, imsave, imshow
-	figure()
-	ax=gca()
-	sRGB1_color_triangle(ax,
-					color_points = [[1.0, 0.0, 1.0], [0.0, 1.0, 1.0],
-					[1.0, 1.0, 0.0]], nsegs = 7)
-
-
-	#savefig('sRGB_triangle.pdf',transparent = True)
-
+	from matplotlib import pyplot as plt
+	find_optimal_radius_vs_L_plane = False
 
 
 	####################
-	figure()
-	ax=gca()
 
 	L_plane = 74
 	# First hue angle of triangle vertices
-	angle_0 = -60.0
+	angle_0 = -70.0
 	## a radius for the triangle
-	radius = 45
+	radius = 30
 	###### these you'll likely never change
 	## Center of Triangle
 	center = (0,0)
@@ -556,60 +573,91 @@ if __name__ == "__main__":
 	#savefig('CIELab_triangle.pdf',transparent = True)
 
 	##################
-	figure()
-	ax = gca()
-
-
-	radius = my_map.maximize_triangle_radius()
-	print(radius)
-
+	fig, ax = plt.subplots()
 	triangle_on_isoluminant_slice(ax, my_map)
-	ax.set_title("angle_0 = %.3f degrees" % angle_0)
+	ax.set_title("Map as input")
 
+
+	###########
+
+	fig, ax = plt.subplots()
+	radius = my_map.maximize_triangle_radius()
+	triangle_on_isoluminant_slice(ax, my_map)
+	ax.set_title("radius = %.3f" % radius)
+	print(radius)
 
 	#savefig('CIELAB_triangle_with_LAB_slice.pdf',transparent = True)
 	############
-	figure()
-	ax = gca()
+	fig, ax = plt.subplots()
 
 	angle_0, radius = my_map.maximize_triangle_radius_and_angle_0()
-	print( angle_0, radius)
-	ax.set_title("angle_0 = %.3f degrees" % angle_0)
+	ax.set_title("radius = %.3f, angle_0 = %.3f degrees" %(radius, angle_0))
 	triangle_on_isoluminant_slice(ax, my_map)
-
+	print(  radius, angle_0)
 	#savefig('maximized_CIELAB_triangle_with_LAB_slice.pdf',transparent = True)
 
 
+
+	############# isoluminant triangle test
+	fig, ax = plt.subplots()
+	isoluminant_triangle(ax, my_map, nsegs = 7, order = [0,2,1])
+
+	############# isoluminant triangle test
+	fig, ax = plt.subplots()
+	norm = 0.5
+	isoluminant_triangle(ax, my_map, nsegs = 7, order = [0,2,1], norm = norm)
+	ax.set_title('Triangle at norm = %.3f'%norm)
 	###############
 
-	figure()
-	ax = gca()
-	ax.grid(b=True, which='major', color='k', linestyle='-')
-	ax.grid(b=True, which='minor', color='grey', linestyle='-')
+
+
+	############# sRGB1 triangle test
+	fig, ax = plt.subplots()
+	sRGB1_color_triangle(ax,
+					color_points = [[1.0, 0.0, 1.0], [0.0, 1.0, 1.0],
+					[1.0, 1.0, 0.0]], nsegs = 7)
+
+
+	############# isoluminant triangle test
+	fig, ax = plt.subplots()
+	norm = 0.5
+	sRGB1_color_triangle(ax,
+					color_points = [[1.0, 0.0, 1.0], [0.0, 1.0, 1.0],
+					[1.0, 1.0, 0.0]], nsegs = 7, norm = norm)
+	ax.set_title('Triangle at norm = %.3f'%norm)
 
 
 
-	Lp_step = 10 #0.5
+	################
+	if find_optimal_radius_vs_L_plane:
+		fig, ax = plt.subplots()
+		ax.grid(b=True, which='major', color='k', linestyle='-')
+		ax.grid(b=True, which='minor', color='grey', linestyle='-')
 
-	angle_0 = -180
-	angle_0_list = []
-	radius_list = []
-	from numpy import arange
-	Lp_list = arange(95,0,-Lp_step)
-	for Lp in  Lp_list:
-		my_map.L_plane = Lp
-		angle_0, radius = my_map.maximize_triangle_radius_and_angle_0()
+		Lp_step = 0.5
 
-		angle_0_list.append(angle_0)
-		radius_list.append(radius)
+		angle_0_list = []
+		radius_list = []
+		from numpy import arange
+		Lp_list = arange(95,30,-Lp_step)
+		for Lp in  Lp_list:
+			my_map.L_plane = Lp
+			angle_0, radius = my_map.maximize_triangle_radius_and_angle_0()
 
-		print(Lp, angle_0, radius)
+			angle_0_list.append(angle_0)
+			radius_list.append(radius)
 
-	ax.plot(Lp_list, radius_list)
-	ax.set_xlabel('L*')
-	ax.set_ylabel('Max Radius')
+			print(Lp, angle_0, radius)
 
-	ax.minorticks_on()
+		ax.plot(Lp_list, radius_list)
+		ax.set_xlabel('L*')
+		ax.set_ylabel('Max Radius')
 
-	#savefig('maximized_radius_vs_Lp.pdf',transparent = True)
-	show()
+		ax.minorticks_on()
+
+		#savefig('maximized_radius_vs_Lp.pdf',transparent = True)
+
+
+
+	######
+	plt.show()
