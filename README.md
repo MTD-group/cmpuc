@@ -89,7 +89,7 @@ Here are the results of this example script:
 
 <img src="/cmpuc/examples/isoluminant_triangle.png" width="400" ><img src="/cmpuc/examples/sRGB1_triangle.png" width="400" >
 
-2. (left) The chemical mixing triangle for the cmpuc color mapping, ()
+2. (left) The chemical mixing triangle for the cmpuc color mapping and (right) the traditional RGB chemical mixing triangle.
 
 <img src="/cmpuc/examples/isoslice.png" width="500" >
 
