@@ -1,5 +1,7 @@
 # Composition Mapping within Perceptually Uniform Colorspaces (cmpuc) #
-cmpuc is a small tool for performing perceptually uniform color mappings of three component composition fields. A common application of is EDS mapping of elements where traditionally red, green, and blue are used. cmpuc is designed to integrate into the Matplotlib/NumPy ecosystem and relies on [colorspacious](https://colorspacious.readthedocs.io/en/latest/) for colorspace transformations. The code is still at the prototype stage but should work for most cases. By default cmpuc uses the CIELAB color space, however CAM02-UCS is implemented yet untested. 
+cmpuc is a tool for performing perceptually uniform color mappings of three component composition fields. A common application occurs in energy-dispersive x-ray spectroscopy (EDS) mapping of elements in multicomponent materials where traditionally red, green, and blue are used to represent different comprising elements. cmpuc provides better visualization fidelity by replacing the traditional primary colors
+
+cmpuc integrates into the Matplotlib/NumPy ecosystem and relies on [colorspacious](https://colorspacious.readthedocs.io/en/latest/) for colorspace transformations. The code is still at the prototype stage but should work for most cases. By default, cmpuc uses the CIELAB color space; however, CAM02-UCS is implemented although untested. 
 
 ## Why? ##
 For chemical mapping, the red, green, and blue primaries are typically used for three species. This method has serious interpretability mostly stemming from the large brightness differences between the sRGB primaries.
@@ -8,7 +10,7 @@ For chemical mapping, the red, green, and blue primaries are typically used for 
 Our paper exploring the concepts, the improvements, and a case study are [here](Will_be_on_ArXiv_soon).
 
 ## Usage ##
-The basic idea is to map composition onto an inverted triangular pyramid in a uniform color space (UCS). The wider the pyramid base, the more chemical constrast there is. Likewise, the taller the pyramid, the more consentration contrast there is. In this example (*simple_example.py*), we put the base triangle plane at L = 61.5, and use a feature of the code to rotate and stretch the triange to be as wide as possibe while still fitting in the sRGB color space. From here, we plot some test data, show the base triange in the unform color space, and make mixing diagram to aid in reading the color mapping. For comparison, we also do the same with sRGB primaries.
+The basic idea is to map composition onto an inverted triangular pyramid in a uniform color space (UCS). The wider the pyramid base, the more chemical constrast there is. Likewise, the taller the pyramid, the more concentration contrast there is. In this example (*simple_example.py*), we put the base triangle plane at L = 61.5, and use a feature of the code to rotate and stretch the triange to be as wide as possibe while still fitting in the sRGB color space. From here, we plot some test data, show the base triange in the unform color space, and construct a mixing diagram to aid in reading the color mapping. For comparison, we also do the same with sRGB primaries.
 
 ```python
 from cmpuc import uniform_chemical_map,  isoluminant_triangle, triangle_on_isoluminant_slice
@@ -91,11 +93,11 @@ Here are the results of this example script:
 
 <img src="/cmpuc/examples/isoslice.png" width="500" >
 
-3. The pyramid base plane is an isoluminant slice of the perceptually uniform color space. Lower signal shrinks the triangle towards the black point, *i.e.* the point of the pyramid
+3. The pyramid base plane is an isoluminant slice of the perceptually uniform color space. Lower signal shrinks the triangle towards the black point, *i.e.* the point of the pyramid.
 
 
 ## Using Real Data ##
-In our EDS example (*EDS_example.py*) from our [paper](Will_be_on_ArXiv_soon), we use the same isoluminant triangle base as in the previus example we can see how the chemical mapping performs with real data.
+In our EDS example (*EDS_example.py*) from our [paper](Will_be_on_ArXiv_soon), we use the same isoluminant triangle base as in the previus example. We now see how the chemical mapping performs with real data.
 
 <img src="/cmpuc/examples/EDS_example/EDS_map.png" width="400" ><img src="/cmpuc/examples/EDS_example/mixing_triangle.png" width="400" >
 
@@ -104,7 +106,7 @@ In our EDS example (*EDS_example.py*) from our [paper](Will_be_on_ArXiv_soon), w
 (Top left) The chemical mapping of the EDS data with (top right) the chemical mixing triangle. (Bottom left) an average of the bottom 20 line scans from the chemical mapping. (Bottom right) The triangle in the perceptually uniform color space.
 
 ### Enhancing Signal Brightness ###
-The mapping is quite dark since the signals have little overlap. We have implemented a feature to raise the pyramid base beyond the bounds of the sRGB color space but while maintaing the triangle radius and orientation and ensuring all of the mapped data is still in the bounds of the sRGB color space. By enabling this feature with ```auto_tune_L_plane_to_data=True```, there can be more brightness and signal constrast.
+The mapping is quite dark since the signals have little overlap. We have implemented a feature to raise the pyramid base beyond the bounds of the sRGB color space while both maintaing the triangle radius and orientation and ensuring all of the mapped data is still in the bounds of the sRGB color space. By enabling this feature with ```auto_tune_L_plane_to_data=True```, there can be more brightness and signal constrast.
 
 <img src="/cmpuc/examples/EDS_example/EDS_map_autotuned.png" width="400" >
 
