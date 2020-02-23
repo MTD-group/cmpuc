@@ -32,7 +32,9 @@ my_map =   uniform_chemical_map(
                radius = radius, center = center)
 my_map.maximize_triangle_radius_and_angle_0(verbose = True)
 
-
+```
+Now we can import some test data. The ```my_map``` expects three 2D NumPy arrays in a list or array in the form of:  ```my_map([chemical_1_2D_array, chemical_2_2D_array, chemical_3_2D_array])``` and it returns an image in a NumPy array compatible with Matplotlib's imshow and imsave *i.e.* ```image[x_index,y_index,rgb_index]```. 
+```python
 ### This will raise the L_plane until the data is at the edge of displayble colors
 auto_tune_L_plane_to_data = False
 # Using the contrast boost allows you to have some points that go outside the
