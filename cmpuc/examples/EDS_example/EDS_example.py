@@ -166,8 +166,12 @@ fig_LAB_Slice.savefig('CIELab_slice_with_triangle.svg', transparent = True, dpi 
 fig_LAB_Slice.savefig('CIELab_slice_with_triangle.png', transparent = True, dpi =300)
 
 
+########## 3D shape 
 
-
+from plot_3d import UCS_pyramid_3D
+fig = plt.figure()
+ax = fig.gca(projection='3d')
+UCS_pyramid_3D(ax,  chemical_map = my_map, nsegs = number_of_triangles)
 
 
 

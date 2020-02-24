@@ -5,7 +5,7 @@ import numpy as np
 # maximum lightness L* of 61.5 gives the widest triangle
 L_plane = 61.5
 # First hue angle of triangle vertices
-angle_0 = 60.0
+angle_0 = 25.0
 ## a radius for the triangle
 radius = 30
 ###### these you'll likely never change
@@ -16,8 +16,8 @@ my_map =   uniform_chemical_map(
 							L_plane = L_plane,
 							angle_0 = angle_0,
 							radius = radius, center = center)
-my_map.maximize_triangle_radius_and_angle_0(verbose = True)
-
+my_map.maximize_triangle_radius_and_angle_0(verbose = True, angle_range = 20, angle_step = 0.01)
+print(my_map.angle_0, my_map.radius)
 
 ### this will raise the L_plane until the data is at the edge of displayble colors
 auto_tune_L_plane_to_data = False
