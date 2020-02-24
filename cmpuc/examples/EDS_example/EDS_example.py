@@ -1,11 +1,5 @@
 
 
-
-
-
-
-
-
 # maximum lightness L* of 61.5 gives the widest triangle
 L_plane = 61.5
 
@@ -14,16 +8,12 @@ angle_0 = -180.0
 
 radius = 30
 
-
-
 ### this will raise the L_plane until the data is at the edge of displayble colors
 auto_tune_L_plane_to_data = False
-
 
 # using the contrast boost allows you to have some points that go outside the
 # displayble color range so that you can better see the majority
 contrast_boost = 1.0
-
 
 # basic red-green color blindness simulation
 use_deuteranomaly = False
@@ -69,9 +59,9 @@ def make_labels(norm=1.0):
 
 from numpy import loadtxt, array, zeros, ones, arctan2, mean, clip
 from cmpuc.core import *
-from matplotlib.pyplot import *
+from matplotlib import pyplot as plt
 from matplotlib.ticker import MultipleLocator
-rcParams.update({'font.size': 12})
+plt.rcParams.update({'font.size': 12})
 
 
 
@@ -88,7 +78,7 @@ print('L*', my_map.L_plane, 'First Optimal Hue Angle', my_map.angle_0, 'Optimal 
 
 
 
-fig_EDS, ax_EDS = subplots(figsize = (3.2, 2.5), dpi = 440/3.0)
+fig_EDS, ax_EDS = plt.subplots(figsize = (3.2, 2.5), dpi = 440/3.0)
 
 
 sRGB1_map  = my_map(
@@ -114,7 +104,7 @@ number_of_triangles = 32
 
 if auto_tune_L_plane_to_data==False and contrast_boost <= 1.0:
 
-	fig_Tri, ax_Tri = subplots(ncols = 1, figsize = (3.2, 2.5), dpi = 440/3.0)
+	fig_Tri, ax_Tri = plt.subplots(ncols = 1, figsize = (3.2, 2.5), dpi = 440/3.0)
 	isoluminant_triangle(ax_Tri, my_map,
 					nsegs = number_of_triangles,
 					labels = make_labels(),
@@ -124,7 +114,7 @@ if auto_tune_L_plane_to_data==False and contrast_boost <= 1.0:
 
 else:
 	norms = [ 0.5, 0.8, 1.0]
-	fig_Tri, ax_Tri = subplots(ncols = len(norms), figsize = (6.5, 2.5), dpi = 440/3.0)
+	fig_Tri, ax_Tri = plt.subplots(ncols = len(norms), figsize = (6.5, 2.5), dpi = 440/3.0)
 
 	for i in range(len(norms)):
 		isoluminant_triangle(ax_Tri[i], my_map, norm =norms[i],
@@ -132,7 +122,7 @@ else:
 						labels = make_labels(norm=norms[i]),
 						font_options = {'fontsize': 8},
 						use_deuteranomaly = use_deuteranomaly,
-						remove_undisplayable = True )
+						undisplayable_action = 'remove' )
 		ax_Tri[i].set_title('Norm = %.1f'%norms[i], fontsize = 8)
 
 
@@ -146,12 +136,12 @@ fig_Tri.savefig('mixing_triangle.png', transparent = True, dpi =300)
 
 if auto_tune_L_plane_to_data==False and contrast_boost <= 1.0:
 
-	fig_LAB_Slice, ax_LAB_Slice = subplots(figsize = (3.2, 2.5), dpi = 440/3.0)
+	fig_LAB_Slice, ax_LAB_Slice = plt.subplots(figsize = (3.2, 2.5), dpi = 440/3.0)
 	triangle_on_isoluminant_slice(ax_LAB_Slice, my_map,
 		ab_step_size = 1.0, use_deuteranomaly= use_deuteranomaly)
 
 else:
-	fig_LAB_Slice, ax_LAB_Slice  = subplots(ncols = len(norms), figsize = (6.5, 2.5), dpi = 440/3.0)
+	fig_LAB_Slice, ax_LAB_Slice  = plt.subplots(ncols = len(norms), figsize = (6.5, 2.5), dpi = 440/3.0)
 
 	for i in range(len(norms)):
 		triangle_on_isoluminant_slice(ax_LAB_Slice[i], my_map, norm = norms[i],
@@ -168,19 +158,24 @@ fig_LAB_Slice.savefig('CIELab_slice_with_triangle.png', transparent = True, dpi 
 
 ########## 3D shape 
 
-from plot_3d import UCS_pyramid_3D
+from cmpuc.plot_3d import UCS_pyramid_3D
 fig = plt.figure()
 ax = fig.gca(projection='3d')
-UCS_pyramid_3D(ax,  chemical_map = my_map, nsegs = number_of_triangles)
+UCS_pyramid_3D(ax, my_map, labels = make_labels(),
+            use_deuteranomaly = use_deuteranomaly,
+            nsegs = number_of_triangles,
+            undisplayable_action = 'remove')
 
-
+fig.savefig('pyramid.pdf', transparent = True,dpi = 1200)
+fig.savefig('pyramid.svg', transparent = True,dpi = 1200)
+fig.savefig('pyramid.png', transparent = True,dpi = 300)
 
 ########## scan_profile ####
 
 scans_to_average = 20
 
 
-fig_Scan, ax_Scan = subplots(figsize = (3.2, 2.5), dpi = 440/3.0)
+fig_Scan, ax_Scan = plt.subplots(figsize = (3.2, 2.5), dpi = 440/3.0)
 
 
 sum_intensity = zeros(data_list[0].shape[1])
@@ -228,4 +223,4 @@ fig_Scan.savefig('line_scan.png',transparent = True, dpi =300)
 ###################################################
 
 
-show()
+plt.show()

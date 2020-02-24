@@ -339,12 +339,6 @@ def color_triangle_mesh(
                                     [nsegs-ix-1.0-iy-1.0, ix+1.0,  iy+1.0]])
                 vertices = fracs.dot(cp)
                 
-            #xc = delta*(1.0+0.5*iy+ix)
-            #yc = deltay *(iy+1) - 0.5*delta*np.tan(30*np.pi/180)
-            #fracs = imap.dot([xc,yc,1])
-            #print (fracs)
-            #color =  (cp[0]*fracs[0] + cp[1]*fracs[1] + cp[2]*fracs[2])
-            #sRGB1_color = cspace_convert(color, chemical_map.color_space, "sRGB1")
             vert_list.append(vertices)
             color_list.append(color)
 
@@ -538,90 +532,48 @@ def sRGB1_triangle(ax,
     font_options = {},
     label_offset = 0.02,
     use_deuteranomaly = False,
-    remove_undisplayable = False,
+    undisplayable_action = 'remove',
     color_for_undisplayable = (1.0, 1.0, 1.0, 0.0),
     triangle_style = default_triangle_style ,
     verbose = False ):
     from matplotlib.patches import Polygon
 
-    patches = []
-    colors = []
 
-    color_ps = np.array([color_points[0], color_points[2], color_points[1]])
-    #color_ps = np.array(color_points)
-    width = norm
-    height = norm*np.sin(60*np.pi/180)
-    delta = width/nsegs
-    deltay = height/nsegs
-    from numpy.linalg import inv
-    #map_matrix = np.array([
-    #                    [0,   0,              1],
-    #                    [0.5, np.sin(60*np.pi/180), 1],
-    #                    [1.0, 0,              1]]).T
+    vert_list, color_list = color_triangle_mesh(
+                color_points =np.array(color_points),
+                nsegs = nsegs,
+                mode = '2D',
+                order = order,
+                norm = norm,
+                verbose = False)
+                
+                
+    vert_list_out = []
+    color_list_out = []
+    for vertices, color in zip(vert_list, color_list):
+        sRGB1_color = color
+        if use_deuteranomaly: sRGB1_color = cspace_convert(sRGB1_color, cvd_space, "sRGB1")
+        if  np.any(sRGB1_color<0,0) or np.any(1.0<sRGB1_color):
+            if undisplayable_action != 'remove':
+                if undisplayable_action == 'replace':
+                    sRGB1_color = color_for_undisplayable
+                else:
+                    sRGB1_color = np.clip(sRGB1_color,0,1)
+                vert_list_out.append(vertices)
+                color_list_out.append(sRGB1_color)
+        else:
+            vert_list_out.append(vertices)
+            color_list_out.append(sRGB1_color)
 
-    map_matrix = np.array([
-                        [0,   0,              1],
-                        [width, 0,              1],
-                        [0.5*width, height, 1]])
-
-    map_matrix = map_matrix[order]
-    map_matrix = map_matrix.T
-
-    imap = inv(map_matrix)
-
-    for i in range(3):
-        if verbose: print ('point',i)
-        if verbose: print(map_matrix.T[i])
-        fracs = imap.dot(map_matrix.T[i])
-        if verbose: print ('fracs', fracs)
-        color = color_ps[0]*fracs[0]+color_ps[1]*fracs[1]+color_ps[2]*fracs[2]
-        if verbose: print('color',color)
-
-
-    if verbose: print('upwards triangles')
-    for iy in range(nsegs):
-        for ix in range(nsegs-iy):
-            vertices = [
-                        (delta*(    0.5*iy+ix), deltay *   iy),
-                        (delta*(0.5+0.5*iy+ix), deltay*(iy+1)),
-                        (delta*(1.0+0.5*iy+ix), deltay *   iy)]
-
-            xc = delta*(0.5+0.5*iy+ix)
-            yc = deltay * iy + 0.5*delta*np.tan(30*np.pi/180)
-            fracs = imap.dot([xc,yc,1])
-            #print (fracs)
-            color = norm * (color_ps[0]*fracs[0]+color_ps[1]*fracs[1]+color_ps[2]*fracs[2])
-            if use_deuteranomaly: color = cspace_convert(color, cvd_space, "sRGB1")
-            if remove_undisplayable:
-                if  np.any(color<0,0) or np.any(1.0<color):
-                    color = bg_color
-            ax.add_patch(  Polygon(vertices, color =np.clip(color,0,1), **triangle_style))
-
-
-    if verbose: print('downwards triangles')
-    for iy in range(nsegs-1):
-        for ix in range(nsegs-iy-1):
-            vertices = [
-                        (delta*(0.5+0.5*iy+ix), deltay *(iy+1)),
-                        (delta*(1.0+0.5*iy+ix), deltay * iy   ),
-                        (delta*(1.5+0.5*iy+ix), deltay *(iy+1))]
-            xc = delta*(1.0+0.5*iy+ix)
-            yc = deltay *(iy+1) - 0.5*delta*np.tan(30*np.pi/180)
-            fracs = imap.dot([xc,yc,1])
-            #print (fracs)
-            color = norm * ( color_ps[0]*fracs[0]+color_ps[1]*fracs[1]+color_ps[2]*fracs[2])
-            if use_deuteranomaly: color = cspace_convert(color, cvd_space, "sRGB1")
-            if remove_undisplayable:
-                if  np.any(color<0,0) or np.any(1.0<color):
-                    color = bg_color
-            ax.add_patch(  Polygon(vertices, color =np.clip(color,0,1), **triangle_style))
-
+    for vertices, sRGB1_color in zip(vert_list_out, color_list_out):
+        ax.add_patch(  Polygon(vertices, color =sRGB1_color, **triangle_style))
+            
     if len(labels) ==3:
-
+        width = norm
+        height = width*np.sin(60*np.pi/180)
         ax.text(   0,             -label_offset, labels[0], ha = 'center', va = 'top',    **font_options)
-        ax.text(   width,         -label_offset, labels[1], ha = 'center', va = 'top',    **font_options)
-        ax.text( 0.5*width, height+label_offset, labels[2], ha = 'center', va = 'bottom', **font_options)
-
+        ax.text(  width,         -label_offset, labels[1], ha = 'center', va = 'top',    **font_options)
+        ax.text( width/2.0, height+label_offset, labels[2], ha = 'center', va = 'bottom', **font_options)
 
 
     ax.set_aspect('equal','box')
