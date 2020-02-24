@@ -25,35 +25,35 @@ center = (0,0)
 elements = ['Pt', 'Ca','P' ]
 
 def data_file(fname):
-	fid = open(fname, 'r')
-	lines = fid.readlines()
-	fid.close()
-	from numpy import array
+    fid = open(fname, 'r')
+    lines = fid.readlines()
+    fid.close()
+    from numpy import array
 
-	data = []
-	for line in lines:
-		data_line = []
-		sline = line.split(',')
-		for a in sline[0:-1]:
-			data_line.append(float(a))
-		data.append(data_line)
-	data = array(data)
+    data = []
+    for line in lines:
+        data_line = []
+        sline = line.split(',')
+        for a in sline[0:-1]:
+            data_line.append(float(a))
+        data.append(data_line)
+    data = array(data)
 
-	return data
+    return data
 
 data_list = []
 for el in elements:
-	data = data_file( el+' At%.csv').T
-	data_list.append( data)
+    data = data_file( el+' At%.csv').T
+    data_list.append( data)
 
 
 def make_labels(norm=1.0):
-	label_list = []
-	for i, el in enumerate(elements):
-		### the contrast_boost here is important so that the labels are correctly scaled
-		label =  '%.1f%%'%(norm*data_list[i].max()/contrast_boost) + ' '+ el
-		label_list.append(label)
-	return label_list
+    label_list = []
+    for i, el in enumerate(elements):
+        ### the contrast_boost here is important so that the labels are correctly scaled
+        label =  '%.1f%%'%(norm*data_list[i].max()/contrast_boost) + ' '+ el
+        label_list.append(label)
+    return label_list
 ############################################################################
 ##################################################################
 
@@ -66,9 +66,9 @@ plt.rcParams.update({'font.size': 12})
 
 
 my_map =   uniform_chemical_map(
-							L_plane = L_plane,
-							angle_0 = angle_0,
-							radius = radius, center = center)
+                            L_plane = L_plane,
+                            angle_0 = angle_0,
+                            radius = radius, center = center)
 my_map.maximize_triangle_radius_and_angle_0(verbose = True)
 
 
@@ -82,10 +82,10 @@ fig_EDS, ax_EDS = plt.subplots(figsize = (3.2, 2.5), dpi = 440/3.0)
 
 
 sRGB1_map  = my_map(
-				data = data_list,
-				contrast_boost = contrast_boost,
-				auto_tune_L_plane_to_data = auto_tune_L_plane_to_data,
-				use_deuteranomaly = use_deuteranomaly)
+                data = data_list,
+                contrast_boost = contrast_boost,
+                auto_tune_L_plane_to_data = auto_tune_L_plane_to_data,
+                use_deuteranomaly = use_deuteranomaly)
 ax_EDS.imshow(np.clip(sRGB1_map,0,1), origin = 'lower')
 ax_EDS.minorticks_on()
 ax_EDS.xaxis.set_major_locator(MultipleLocator(base=20))
@@ -104,26 +104,26 @@ number_of_triangles = 32
 
 if auto_tune_L_plane_to_data==False and contrast_boost <= 1.0:
 
-	fig_Tri, ax_Tri = plt.subplots(ncols = 1, figsize = (3.2, 2.5), dpi = 440/3.0)
-	isoluminant_triangle(ax_Tri, my_map,
-					nsegs = number_of_triangles,
-					labels = make_labels(),
-					font_options = {'fontsize': 8},
-					use_deuteranomaly = use_deuteranomaly)
+    fig_Tri, ax_Tri = plt.subplots(ncols = 1, figsize = (3.2, 2.5), dpi = 440/3.0)
+    isoluminant_triangle(ax_Tri, my_map,
+                    nsegs = number_of_triangles,
+                    labels = make_labels(),
+                    font_options = {'fontsize': 8},
+                    use_deuteranomaly = use_deuteranomaly)
 
 
 else:
-	norms = [ 0.5, 0.8, 1.0]
-	fig_Tri, ax_Tri = plt.subplots(ncols = len(norms), figsize = (6.5, 2.5), dpi = 440/3.0)
+    norms = [ 0.5, 0.8, 1.0]
+    fig_Tri, ax_Tri = plt.subplots(ncols = len(norms), figsize = (6.5, 2.5), dpi = 440/3.0)
 
-	for i in range(len(norms)):
-		isoluminant_triangle(ax_Tri[i], my_map, norm =norms[i],
-						nsegs = int(number_of_triangles*norms[i]),
-						labels = make_labels(norm=norms[i]),
-						font_options = {'fontsize': 8},
-						use_deuteranomaly = use_deuteranomaly,
-						undisplayable_action = 'remove' )
-		ax_Tri[i].set_title('Norm = %.1f'%norms[i], fontsize = 8)
+    for i in range(len(norms)):
+        isoluminant_triangle(ax_Tri[i], my_map, norm =norms[i],
+                        nsegs = int(number_of_triangles*norms[i]),
+                        labels = make_labels(norm=norms[i]),
+                        font_options = {'fontsize': 8},
+                        use_deuteranomaly = use_deuteranomaly,
+                        undisplayable_action = 'remove' )
+        ax_Tri[i].set_title('Norm = %.1f'%norms[i], fontsize = 8)
 
 
 fig_Tri.tight_layout(pad=0.1)
@@ -136,19 +136,19 @@ fig_Tri.savefig('mixing_triangle.png', transparent = True, dpi =300)
 
 if auto_tune_L_plane_to_data==False and contrast_boost <= 1.0:
 
-	fig_LAB_Slice, ax_LAB_Slice = plt.subplots(figsize = (3.2, 2.5), dpi = 440/3.0)
-	triangle_on_isoluminant_slice(ax_LAB_Slice, my_map,
-		ab_step_size = 1.0, use_deuteranomaly= use_deuteranomaly)
+    fig_LAB_Slice, ax_LAB_Slice = plt.subplots(figsize = (3.2, 2.5), dpi = 440/3.0)
+    triangle_on_isoluminant_slice(ax_LAB_Slice, my_map,
+        ab_step_size = 1.0, use_deuteranomaly= use_deuteranomaly)
 
 else:
-	fig_LAB_Slice, ax_LAB_Slice  = plt.subplots(ncols = len(norms), figsize = (6.5, 2.5), dpi = 440/3.0)
+    fig_LAB_Slice, ax_LAB_Slice  = plt.subplots(ncols = len(norms), figsize = (6.5, 2.5), dpi = 440/3.0)
 
-	for i in range(len(norms)):
-		triangle_on_isoluminant_slice(ax_LAB_Slice[i], my_map, norm = norms[i],
-		ab_step_size = 1.0, use_deuteranomaly= use_deuteranomaly)
-		ax_LAB_Slice[i].set_title('Norm = %.1f'%norms[i],fontsize = 8)
+    for i in range(len(norms)):
+        triangle_on_isoluminant_slice(ax_LAB_Slice[i], my_map, norm = norms[i],
+        ab_step_size = 1.0, use_deuteranomaly= use_deuteranomaly)
+        ax_LAB_Slice[i].set_title('Norm = %.1f'%norms[i],fontsize = 8)
 
-	fig_LAB_Slice.suptitle(my_map.color_space, fontsize=10)
+    fig_LAB_Slice.suptitle(my_map.color_space, fontsize=10)
 
 fig_LAB_Slice.tight_layout(pad=0.1)
 fig_LAB_Slice.savefig('CIELab_slice_with_triangle.pdf', transparent = True, dpi =1200)
@@ -156,7 +156,7 @@ fig_LAB_Slice.savefig('CIELab_slice_with_triangle.svg', transparent = True, dpi 
 fig_LAB_Slice.savefig('CIELab_slice_with_triangle.png', transparent = True, dpi =300)
 
 
-########## 3D shape 
+########## 3D shape
 
 from cmpuc.plot_3d import UCS_pyramid_3D
 fig = plt.figure()
@@ -171,45 +171,38 @@ fig.savefig('pyramid.svg', transparent = True,dpi = 1200)
 fig.savefig('pyramid.png', transparent = True,dpi = 300)
 
 ########## scan_profile ####
-
 scans_to_average = 20
 
-
 fig_Scan, ax_Scan = plt.subplots(figsize = (3.2, 2.5), dpi = 440/3.0)
-
-
 sum_intensity = zeros(data_list[0].shape[1])
 
 # get the overall max signal
 normed_data = []
 for data_index in range(3):
-	normed_data.append(data_list[data_index]/data_list[data_index].max())
+    normed_data.append(data_list[data_index]/data_list[data_index].max())
 signal_sum = normed_data[0]+normed_data[1]+normed_data[2]
 signal_sum_max = signal_sum.max()
 overall_norm = signal_sum/signal_sum_max # must be less than 3
-
+#picking an appropriate norm
 if auto_tune_L_plane_to_data==False and contrast_boost <= 1.0:
-	norm = 1.0
+    norm = 1.0
 else:
-	norm = norms[1]
-
+    norm = norms[1]
 sRGB1_color_points = my_map.get_sRGB1_color_points(norm)
+
 ##
 for i in range(3):
-	mean_data = mean(normed_data[i][0: scans_to_average],axis =0)
-	#line_data = data[i][0]
-	sum_intensity += mean_data
-	ax_Scan.plot(mean_data/signal_sum_max , label = elements[i], color = clip(sRGB1_color_points[i],0,1))
+    mean_data = mean(normed_data[i][0: scans_to_average],axis =0)
+    #line_data = data[i][0]
+    sum_intensity += mean_data
+    ax_Scan.plot(mean_data/signal_sum_max , label = elements[i], color = clip(sRGB1_color_points[i],0,1))
+
 ax_Scan.plot(sum_intensity/signal_sum_max , label = 'Total',color = 'k')
 ax_Scan.set_ylabel("Normalized Intensity")
 ax_Scan.set_ylim(0,0.65)
 ax_Scan.set_xlim(0,data_list[0].shape[1]-1)
-
-
 ax_Scan.xaxis.set_major_locator(MultipleLocator(base=20))
 ax_Scan.xaxis.set_minor_locator(MultipleLocator(base=10))
-
-
 ax_Scan.minorticks_on()
 
 ax_Scan.legend(loc= 'upper right')
