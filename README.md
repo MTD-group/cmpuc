@@ -8,6 +8,7 @@ For chemical mapping, the red, green, and blue primaries are typically used for 
 
 ## Citing Cmpuc ##
 Our paper exploring the concepts, the improvements, and a case study are [here](Will_be_on_ArXiv_soon).
+[![DOI](https://zenodo.org/badge/181064496.svg)](https://zenodo.org/badge/latestdoi/181064496)
 
 ## Usage ##
 The basic idea is to map composition onto an inverted triangular pyramid in a uniform color space (UCS). The wider the pyramid base, the more chemical constrast there is. Likewise, the taller the pyramid, the more concentration contrast there is. In this example (*simple_example.py*), we put the base triangle plane at L = 61.5, and use a feature of the code to rotate and stretch the triange to be as wide as possibe while still fitting in the sRGB color space. From here, we plot some test data, show the base triange in the unform color space, and construct a mixing diagram to aid in reading the color mapping. For comparison, we also do the same with sRGB primaries.
