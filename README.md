@@ -7,7 +7,7 @@ cmpuc integrates into the Matplotlib/NumPy ecosystem and relies on [colorspaciou
 For chemical mapping, the red, green, and blue primaries are typically used for three species. This method has serious interpretability mostly stemming from the large brightness differences between the sRGB primaries.
 
 ## Citing Cmpuc ##
-Our paper exploring the concepts, the improvements, and a case study are [here](Will_be_on_ArXiv_soon).
+Our paper exploring the concepts, the improvements, and a case study are [here](https://arxiv.org/abs/2002.12228).
 
 [![DOI](https://zenodo.org/badge/181064496.svg)](https://zenodo.org/badge/latestdoi/181064496)
 
