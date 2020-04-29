@@ -264,8 +264,10 @@ def color_triangle_mesh(
 
     assert mode.upper() in ['2D', '3D']
 
-    
-    cp = color_points[order]*norm
+    cp = []
+    for index in order:
+        cp.append(np.asarray(color_points[index])*norm)
+
     #print(cp)
 
     from numpy.linalg import inv
@@ -274,17 +276,17 @@ def color_triangle_mesh(
         height = width*np.sin(60*np.pi/180)
         delta = width/nsegs
         deltay = height/nsegs
-        
+
         #map_matrix = np.array([
         #                    [0,   0,              1],
         #                    [0.5, np.sin(60*np.pi/180), 1],
         #                    [1.0, 0,              1]]).T
-        
+
         map_matrix = np.array([
                             [0,   0,            1],
                             [0.5*width, height, 1],
                             [width, 0,          1]])
-        
+
         #map_matrix = np.array([
         #                    [0,   0,            1],
         #                    [width, 0,          1],
@@ -305,7 +307,7 @@ def color_triangle_mesh(
             #f3 = (iy+0.5)*(1.0/nsegs)
             #fracs = np.array([1-f2-f3,f2,f3])
             fracs = (1/nsegs) * np.array([nsegs-ix-1/3.-iy-1/3., ix+1/3., iy+1/3.])
-            color = fracs.dot(cp) 
+            color = fracs.dot(cp)
 
             if mode.upper() =='2D':
                 vertices = [
@@ -313,36 +315,36 @@ def color_triangle_mesh(
                         (delta*(0.5+0.5*iy+ix), deltay*(iy+1)),
                         (delta*(1.0+0.5*iy+ix), deltay *   iy)]
             else:
-                fracs = (1/nsegs) * np.array([  
+                fracs = (1/nsegs) * np.array([
                                     [nsegs-ix-iy,   ix,   iy  ],
                                     [nsegs-ix-1-iy, ix+1, iy  ],
                                     [nsegs-ix-iy-1, ix  , iy+1]])
                 vertices = fracs.dot(cp)
             vert_list.append(vertices)
             color_list.append(color)
-            
+
     if verbose: print('downwards triangles')
     for iy in range(nsegs-1):
         for ix in range(nsegs-iy-1):
             #the centroids of 45-45-90 right triangles in this space
             fracs = (1/nsegs) * np.array([nsegs-ix-2./3-iy-2./3, ix+2./3, iy+2./3])
-            color = fracs.dot(cp) 
+            color = fracs.dot(cp)
             if mode.upper()=='2D':
                 vertices = [
                             (delta*(0.5+0.5*iy+ix), deltay *(iy+1)),
                             (delta*(1.0+0.5*iy+ix), deltay * iy   ),
                             (delta*(1.5+0.5*iy+ix), deltay *(iy+1))]
             else:
-                fracs = (1/nsegs) * np.array([  
+                fracs = (1/nsegs) * np.array([
                                     [nsegs-ix-1.0-iy,     ix+1.0,  iy    ],
                                     [nsegs-ix-iy-1.0,         ix,  iy+1.0],
                                     [nsegs-ix-1.0-iy-1.0, ix+1.0,  iy+1.0]])
                 vertices = fracs.dot(cp)
-                
+
             vert_list.append(vertices)
             color_list.append(color)
 
-            
+
     return vert_list, color_list
 
 def isoluminant_triangle(ax,
@@ -360,7 +362,7 @@ def isoluminant_triangle(ax,
 
     assert undisplayable_action in ['remove', 'clip', 'replace']
     from matplotlib.patches import Polygon
-    
+
     vert_list, color_list = color_triangle_mesh(
                 color_points = chemical_map.get_color_points(),
                 mode = '2D',
@@ -378,7 +380,7 @@ def isoluminant_triangle(ax,
     color_list_out = []
     for vertices, color in zip(vert_list, color_list):
         sRGB1_color = cspace_convert(color, chemical_map.color_space, "sRGB1")
-        
+
         if use_deuteranomaly: sRGB1_color = cspace_convert(sRGB1_color, cvd_space, "sRGB1")
         if  np.any(sRGB1_color<0,0) or np.any(1.0<sRGB1_color):
             if undisplayable_action != 'remove':
@@ -388,7 +390,7 @@ def isoluminant_triangle(ax,
                     sRGB1_color = np.clip(sRGB1_color,0,1)
                 vert_list_out.append(vertices)
                 color_list_out.append(sRGB1_color)
-                
+
         else:
 #            ax.add_patch(  Polygon(vertices, color =np.clip(sRGB1_color,0,1), **triangle_style))
             vert_list_out.append(vertices)
@@ -397,8 +399,8 @@ def isoluminant_triangle(ax,
 
     for vertices, sRGB1_color in zip(vert_list_out, color_list_out):
         ax.add_patch(  Polygon(vertices, color =sRGB1_color, **triangle_style))
-        
-        
+
+
     if len(labels) ==3:
         width = norm
         height = width*np.sin(60*np.pi/180)
@@ -546,8 +548,8 @@ def sRGB1_triangle(ax,
                 order = order,
                 norm = norm,
                 verbose = False)
-                
-                
+
+
     vert_list_out = []
     color_list_out = []
     for vertices, color in zip(vert_list, color_list):
@@ -567,7 +569,7 @@ def sRGB1_triangle(ax,
 
     for vertices, sRGB1_color in zip(vert_list_out, color_list_out):
         ax.add_patch(  Polygon(vertices, color =sRGB1_color, **triangle_style))
-            
+
     if len(labels) ==3:
         width = norm
         height = width*np.sin(60*np.pi/180)
@@ -613,7 +615,7 @@ if __name__ == "__main__":
 
     #savefig('CIELab_triangle.pdf',transparent = True)
 
- 
+
 
     ##################
     fig, ax = plt.subplots()
