@@ -11,6 +11,17 @@ Our paper exploring the concepts, the improvements, and a case study are [here](
 
 [![DOI](https://zenodo.org/badge/181064496.svg)](https://zenodo.org/badge/latestdoi/181064496)
 
+
+## Installation ### 
+
+Start with cloning the git repo with:
+```
+git clone https://github.com/MTD-group/cmpuc.git
+```
+You'll need to append your python path in your .bashrc or .bash_profile file with the path to cmpuc:
+```
+export PYTHONPATH=$PYTHONPATH:THE/PATH/TO/cmpuc
+
 ## Usage ##
 The basic idea is to map composition onto an inverted triangular pyramid in a uniform color space (UCS). The wider the pyramid base, the more chemical constrast there is. Likewise, the taller the pyramid, the more concentration contrast there is. In this example (*simple_example.py*), we put the base triangle plane at L = 61.5, and use a feature of the code to rotate and stretch the triange to be as wide as possibe while still fitting in the sRGB color space. From here, we plot some test data, show the base triange in the unform color space, and construct a mixing diagram to aid in reading the color mapping. For comparison, we also do the same with sRGB primaries.
 
@@ -50,12 +61,16 @@ image  = my_map(
 				auto_tune_L_plane_to_data = auto_tune_L_plane_to_data,
 				use_deuteranomaly = False)
 
-################## now we can make plot and  accessory plots
+
 
 fig, ax = plt.subplots()
 ax.imshow(np.clip(image,0,1), origin = 'lower')
 fig.savefig('cmpuc_mapping.png',transparent = True, dpi = 150 )
+```
+Other than ```data```, the other fields are unnecessary but often helpful. ```test_compositions``` is the aforementioned list of three 2D ndarrays of composition data. This next section will create a helpful mixing triangle and produce a comparison against R-G-B primary mixing for the same data.
 
+```
+################## now we can make plot and  accessory plots
 ## when looking at the LAB slice, the colors are computed on a grid,
 ## you can control how fine that grid is.
 fig, ax = plt.subplots()
